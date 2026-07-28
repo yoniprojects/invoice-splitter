@@ -245,6 +245,9 @@
     border-radius:8px;
     font-family:inherit;
     color:var(--ink);
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
   .name-input:hover{border-color:var(--line);}
   .name-input:focus{outline:none;border-color:var(--stamp);background:#fff;}
@@ -475,6 +478,48 @@
     font-size:12px;
     margin-top:40px;
     line-height:1.6;
+  }
+
+  /* ---------- Mobile Optimization for Items List ---------- */
+  @media(max-width: 680px){
+    .head-row{
+      display: none; /* Hide desktop column titles on mobile */
+    }
+    .row{
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      padding: 14px 6px;
+      position: relative;
+    }
+    .name-input{
+      font-size: 15px;
+      padding: 4px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .row > div:nth-child(2), /* Price input wrapper/field */
+    .price-input {
+      text-align: right !important;
+      padding: 4px 0;
+    }
+    .assign-group{
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+    .assign-pill{
+      flex: 1;
+      text-align: center;
+      padding: 8px 6px;
+    }
+    .del-btn{
+      position: absolute;
+      top: 10px;
+      left: 4px;
+      padding: 4px 8px;
+    }
   }
 </style>
 </head>
@@ -871,3 +916,4 @@ downloadBtn.addEventListener('click', () => {
 </script>
 </body>
 </html>
+```[cite: 1]
