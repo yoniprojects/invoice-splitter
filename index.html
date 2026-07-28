@@ -558,6 +558,10 @@
         <div class="totals-line"><span>סה"כ פריטים</span><span id="subtotalVal">₪0.00</span></div>
         <div class="totals-line coupon-line"><span>הנחה</span><span id="couponVal">-₪0.00</span></div>
         <div class="totals-line grand"><span>לתשלום בסה"כ</span><span id="grandVal">₪0.00</span></div>
+        
+        <button class="ghost-btn" id="downloadBtn" type="button" style="width:100%; margin-top:16px;">
+          הורדת רשימה מפושטת ↓
+        </button>
       </div>
       <div class="perforation"></div>
     </aside>
@@ -838,6 +842,32 @@ addItemBtn.addEventListener('click', ()=>{
 });
 
 couponInput.addEventListener('input', updateSummary);
+
+const downloadBtn = document.getElementById('downloadBtn');
+
+downloadBtn.addEventListener('click', () => {
+  let content = "רשימת פריטים ושיוכים:\n\n";
+  
+  items.forEach(it => {
+    const assignees = it.assignees.size > 0 
+      ? Array.from(it.assignees).map(a => NAME_HE[a]).join(', ')
+      : 'לא משויך';
+      
+    const itemName = it.name.trim() || 'פריט ללא שם';
+    content += `${itemName} - ${assignees}\n`;
+  });
+  
+  // Create and trigger download
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'חלוקת_פריטים.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
 </script>
 </body>
 </html>
