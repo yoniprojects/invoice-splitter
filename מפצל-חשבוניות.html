@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מפצל חשבוניות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F6F0E3;
+    --paper-alt: #EDE4CC;
+    --card: #FFFEFB;
+    --ink: #2B2620;
+    --ink-soft: #7A7266;
+    --line: #DDD1B0;
+    --stamp: #B23A48;
+    --stamp-soft: #F4DEDF;
+    --good: #4F7A5C;
+    --amber: #BD7F2C;
+    --amber-soft: #F2E2C2;
+
+    /* People colors */
+    --orin: #9b59b6; /* Purple */
+    --orin-soft: #ecdcf5;
+    --liat: #1abc9c; /* Turquoise */
+    --liat-soft: #d1f2eb;
+    --yoni: #4C7A28; /* Deep olive green — reads distinctly from Liat's turquoise */
+    --yoni-soft: #dfe9cd;
+
+    --font-body: 'Heebo', -apple-system, BlinkMacSystemFont, "Segoe UI", "Arial Hebrew", "Noto Sans Hebrew", sans-serif;
+
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #FBFAF4 0%, transparent 60%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/></svg>"),
+      var(--paper);
+    color:var(--ink);
+    font-family:var(--font-body);
+    min-height:100vh;
+    padding:32px 18px 80px;
+  }
+  .mono{font-family:"Courier New",Courier,monospace;font-variant-numeric:tabular-nums;}
+  .wrap{max-width:1080px;margin:0 auto;}
+
+  /* ---------- Hero ---------- */
+  .hero{text-align:center;margin-bottom:34px;}
+  .eyebrow{
+    font-family:var(--font-body);
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:.06em;
+    color:var(--amber);
+    margin:0 0 10px;
+  }
+  .hero h1{
+    font-size:clamp(34px,5vw,50px);
+    margin:0 0 12px;
+    font-weight:800;
+    letter-spacing:-0.01em;
+  }
+  .hero h1 span{
+    color:var(--stamp);
+    display:inline-block;
+    transform:rotate(-2deg);
+    position:relative;
+  }
+  .hero h1 span::after{
+    content:"";
+    position:absolute;
+    left:-6px;right:-6px;bottom:2px;
+    height:10px;
+    background:var(--stamp-soft);
+    z-index:-1;
+    border-radius:3px;
+    transform:rotate(1deg);
+  }
+  .hero .sub{
+    color:var(--ink-soft);
+    max-width:520px;
+    margin:0 auto;
+    line-height:1.55;
+    font-size:15px;
+  }
+
+  /* ---------- Paste ---------- */
+  .upload-card{margin-bottom:30px;}
+  .upload-zone{
+    background:var(--card);
+    border:2px dashed var(--line);
+    border-radius:var(--radius);
+    padding:20px 22px;
+    transition:.15s ease;
+  }
+  .upload-zone.drag{
+    border-color:var(--stamp);
+    background:var(--stamp-soft);
+  }
+  .upload-zone .zone-head{
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:10px;
+  }
+  .upload-zone svg{opacity:.55;flex-shrink:0;}
+  .upload-zone p{margin:4px 0;font-size:15px;}
+  .upload-zone .hint{color:var(--ink-soft);font-size:13px;margin-top:8px;}
+  .paste-textarea{
+    width:100%;
+    min-height:160px;
+    resize:vertical;
+    border:1px solid var(--line);
+    background:var(--paper-alt);
+    border-radius:10px;
+    padding:12px 14px;
+    font-family:"Courier New",monospace;
+    font-size:13px;
+    line-height:1.5;
+    color:var(--ink);
+  }
+  .paste-textarea:focus{outline:none;border-color:var(--stamp);background:#fff;}
+  .paste-actions{
+    display:flex;align-items:center;gap:12px;
+    margin-top:12px;
+  }
+  .primary-btn{
+    background:var(--stamp);
+    border:none;
+    color:#fff;
+    font-weight:700;
+    font-size:14px;
+    padding:10px 20px;
+    border-radius:9px;
+    cursor:pointer;
+    font-family:inherit;
+    transition:.12s;
+  }
+  .primary-btn:hover{filter:brightness(1.06);}
+  .primary-btn:disabled{opacity:.5;cursor:default;}
+  .upload-status{
+    margin-top:14px;
+    text-align:center;
+    font-size:14px;
+    color:var(--ink-soft);
+  }
+  .upload-status.error{color:var(--stamp);}
+  .spinner{
+    display:inline-block;width:14px;height:14px;
+    border:2px solid var(--line);border-top-color:var(--stamp);
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+    vertical-align:middle;
+    margin-left:8px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ---------- Board layout ---------- */
+  .board{
+    display:grid;
+    grid-template-columns:1fr 320px;
+    gap:24px;
+    align-items:start;
+  }
+  @media(max-width:820px){
+    .board{grid-template-columns:1fr;}
+  }
+
+  /* ---------- Items panel ---------- */
+  .items-panel{
+    position:relative;
+    background:linear-gradient(180deg, var(--card), var(--paper-alt) 160%);
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    padding:22px;
+  }
+  .items-panel::before{
+    content:"";
+    position:absolute;
+    top:-11px; right:34px;
+    width:64px; height:22px;
+    background:repeating-linear-gradient(45deg, rgba(189,127,44,.5) 0 6px, rgba(189,127,44,.28) 6px 12px);
+    transform:rotate(-4deg);
+    border-radius:2px;
+    box-shadow:0 2px 5px rgba(0,0,0,.08);
+  }
+  .items-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .items-header h2{
+    font-size:18px;margin:0;
+    font-weight:700;
+    display:flex;align-items:baseline;gap:8px;
+  }
+  .items-header h2 span{
+    font-family:var(--font-body);
+    color:var(--ink-soft);
+    font-size:13px;font-weight:400;
+  }
+  .ghost-btn{
+    background:var(--paper-alt);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    color:var(--ink);
+    font-family:inherit;
+    transition:.12s;
+  }
+  .ghost-btn:hover{background:var(--amber-soft);border-color:var(--amber);color:var(--amber);}
+
+  .row{
+    display:grid;
+    grid-template-columns:1fr 100px 180px 32px;
+    gap:10px;
+    align-items:center;
+    padding:10px 4px;
+  }
+  .head-row{
+    border-bottom:2px solid var(--line);
+    padding-bottom:10px;
+    margin-bottom:4px;
+    font-size:12.5px;
+    letter-spacing:.02em;
+    color:var(--ink-soft);
+    font-weight:600;
+    font-family:var(--font-body);
+  }
+  #itemsList .row{
+    border-bottom:1px dashed var(--line);
+  }
+  #itemsList .row:last-child{border-bottom:none;}
+
+  .name-input{
+    width:100%;
+    border:1px solid transparent;
+    background:transparent;
+    font-size:14.5px;
+    padding:7px 8px;
+    border-radius:8px;
+    font-family:inherit;
+    color:var(--ink);
+  }
+  .name-input:hover{border-color:var(--line);}
+  .name-input:focus{outline:none;border-color:var(--stamp);background:#fff;}
+
+  /* Hidden Price Input Styles */
+  .price-input{
+    width:100%;
+    border:1px solid transparent;
+    background:transparent;
+    font-size:14px;
+    padding:7px 8px;
+    border-radius:8px;
+    text-align:center;
+    font-family:"Courier New",monospace;
+    color:var(--ink);
+    transition: all 0.1s ease;
+  }
+  /* Remove number arrows so it looks like plain text */
+  .price-input::-webkit-outer-spin-button,
+  .price-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .price-input[type=number] {
+    -moz-appearance: textfield;
+  }
+  /* Read-only (Static Text) State */
+  .price-input[readonly] {
+    cursor: default;
+    user-select: none;
+  }
+  /* Editable State Revealed on Double-Click */
+  .price-input:not([readonly]) {
+    border-color: var(--line);
+    background: var(--paper-alt);
+    cursor: text;
+  }
+  .price-input:not([readonly]):focus {
+    outline:none;
+    border-color:var(--stamp);
+    background:#fff;
+  }
+
+  /* Assignment Pill Styles */
+  .assign-group{display:flex;gap:6px;justify-content:center;}
+  .assign-pill{
+    padding: 6px 11px;
+    border-radius:8px;
+    border:1.5px solid transparent;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:var(--font-body);
+    transition:.12s;
+  }
+
+  /* Color Coding Applied to Base (Unassigned) State — tinted fill so it reads before selection */
+  .assign-pill[data-person="Orin"] { color:#6c3a80; background:var(--orin-soft); border-color:var(--orin-soft); }
+  .assign-pill[data-person="Liat"] { color:#0f7a63; background:var(--liat-soft); border-color:var(--liat-soft); }
+  .assign-pill[data-person="Yoni"] { color:var(--yoni); background:var(--yoni-soft); border-color:var(--yoni-soft); }
+
+  .assign-pill[data-person="Orin"]:hover { border-color: var(--orin); }
+  .assign-pill[data-person="Liat"]:hover { border-color: var(--liat); }
+  .assign-pill[data-person="Yoni"]:hover { border-color: var(--yoni); }
+
+  /* Active (Assigned) State */
+  .assign-pill[data-person="Orin"].active{background:var(--orin);border-color:var(--orin);color:#fff;box-shadow:0 2px 6px rgba(155,89,182,.35);}
+  .assign-pill[data-person="Liat"].active{background:var(--liat);border-color:var(--liat);color:#fff;box-shadow:0 2px 6px rgba(26,188,156,.35);}
+  .assign-pill[data-person="Yoni"].active{background:var(--yoni);border-color:var(--yoni);color:#fff;box-shadow:0 2px 6px rgba(76,122,40,.35);}
+
+  .del-btn{
+    background:none;border:none;
+    color:var(--ink-soft);
+    cursor:pointer;
+    font-size:16px;
+    line-height:1;
+    padding:6px;
+    border-radius:6px;
+  }
+  .del-btn:hover{color:var(--stamp);background:var(--stamp-soft);}
+
+  .unassigned-warning{
+    margin-top:16px;
+    background:var(--stamp-soft);
+    border:1px solid var(--stamp);
+    color:#7A2530;
+    border-radius:10px;
+    padding:11px 14px;
+    font-size:13.5px;
+    line-height:1.5;
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:30px 10px;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+
+  /* ---------- Summary / receipt card ---------- */
+  .summary-panel{position:sticky;top:20px;}
+  .receipt-card{
+    position:relative;
+    background:var(--card);
+    border-radius:var(--radius) var(--radius) 0 0;
+    border:1px solid var(--line);
+    border-bottom:none;
+    padding:22px 22px 4px;
+    box-shadow:0 8px 24px rgba(35,38,43,0.06);
+  }
+  .receipt-card::before{
+    content:"";
+    position:absolute;
+    top:-11px; left:34px;
+    width:64px; height:22px;
+    background:repeating-linear-gradient(45deg, rgba(155,89,182,.4) 0 6px, rgba(155,89,182,.22) 6px 12px);
+    transform:rotate(3deg);
+    border-radius:2px;
+    box-shadow:0 2px 5px rgba(0,0,0,.08);
+  }
+  .receipt-top h3{
+    margin:0 0 4px;
+    font-weight:700;
+    font-size:19px;
+    text-align:center;
+    letter-spacing:.01em;
+  }
+  .receipt-top .receipt-sub{
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    font-family:var(--font-body);
+    letter-spacing:.04em;
+    margin-bottom:16px;
+  }
+
+  .coupon-row{margin-bottom:14px;}
+  .coupon-row label{
+    display:block;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    line-height:1.4;
+  }
+  .coupon-row input{
+    width:100%;
+    border:1px solid var(--line);
+    background:var(--paper-alt);
+    border-radius:8px;
+    padding:9px 10px;
+    font-family:"Courier New",monospace;
+    font-size:14px;
+    text-align:center;
+  }
+  .coupon-row input:focus{outline:none;border-color:var(--amber);background:#fff;}
+
+  .divider{border-top:1px dashed var(--line);margin:14px 0;}
+
+  .person-line{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:7px 8px 7px 0;
+    font-size:14.5px;
+    border-inline-start:3px solid transparent;
+    border-radius:4px;
+    margin-inline-start:-2px;
+  }
+  .person-name{display:flex;align-items:center;gap:8px;font-weight:600;}
+  .swatch{width:11px;height:11px;border-radius:3px;display:inline-block;}
+  .person-line[data-person="Orin"]{border-inline-start-color:var(--orin);background:linear-gradient(90deg, var(--orin-soft), transparent 60%);}
+  .person-line[data-person="Liat"]{border-inline-start-color:var(--liat);background:linear-gradient(90deg, var(--liat-soft), transparent 60%);}
+  .person-line[data-person="Yoni"]{border-inline-start-color:var(--yoni);background:linear-gradient(90deg, var(--yoni-soft), transparent 60%);}
+  .person-line[data-person="Orin"] .swatch{background:var(--orin);}
+  .person-line[data-person="Liat"] .swatch{background:var(--liat);}
+  .person-line[data-person="Yoni"] .swatch{background:var(--yoni);}
+  .person-line[data-person="Orin"] .person-name{color:#6c3a80;}
+  .person-line[data-person="Liat"] .person-name{color:#0f7a63;}
+  .person-line[data-person="Yoni"] .person-name{color:var(--yoni);}
+  .person-amt{font-family:"Courier New",monospace;font-weight:700;}
+
+  .bar-track{
+    height:5px;
+    background:var(--paper-alt);
+    border-radius:3px;
+    margin-top:8px;
+    overflow:hidden;
+    display:flex;
+  }
+  .bar-seg{height:100%;}
+  .bar-seg.orin{background:var(--orin);}
+  .bar-seg.liat{background:var(--liat);}
+  .bar-seg.yoni{background:var(--yoni);}
+
+  .totals-line{
+    display:flex;justify-content:space-between;
+    font-size:13.5px;
+    padding:6px 0;
+    color:var(--ink-soft);
+  }
+  .totals-line span:last-child{font-family:"Courier New",monospace;}
+  .totals-line.coupon-line span:last-child{color:var(--good);}
+  .totals-line.grand{
+    font-size:17px;
+    font-weight:800;
+    color:var(--ink);
+    padding-top:10px;
+    margin-top:4px;
+    border-top:1px solid var(--line);
+  }
+  .totals-line.grand span:last-child{color:var(--stamp);}
+
+  .perforation{
+    height:16px;
+    margin-top:6px;
+    background:
+      linear-gradient(-45deg, var(--paper) 6px, transparent 0) 0 6px,
+      linear-gradient(45deg, var(--paper) 6px, transparent 0) 0 6px;
+    background-size:12px 12px;
+    background-repeat:repeat-x;
+    background-color:var(--card);
+    border-radius:0 0 6px 6px;
+  }
+
+  footer{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:12px;
+    margin-top:40px;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <p class="eyebrow">קניות משותפות · שלושה שותפים</p>
+    <h1>מפצל <span>חשבוניות</span></h1>
+    <p class="sub">מדביקים את הטקסט של החשבונית מהאתר, מסמנים מי הזמין כל פריט, ומקבלים בדיוק כמה אורין, ליאת ויוני חייבים.</p>
+  </div>
+
+  <div class="upload-card">
+    <div class="upload-zone" id="dropZone">
+      <div class="zone-head">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#23262B" stroke-width="1.4">
+          <path d="M6 2h9l5 5v13a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"/>
+          <path d="M9 13h6M9 16.5h6M9 9.5h2"/>
+        </svg>
+        <p>מדביקים כאן את הטקסט של החשבונית</p>
+      </div>
+      <textarea class="paste-textarea" id="pasteArea" dir="auto" placeholder="פלפל חריף&#10;132&#10;0.042 ק&quot;ג&#10;0.13 ₪&#10;..."></textarea>
+      <p class="hint">מעתיקים את פרטי הפריטים מהאתר של הסופר ומדביקים כאן, שורה אחר שורה. אפשר גם להוסיף פריטים ידנית בהמשך.</p>
+      <div class="paste-actions">
+        <button class="primary-btn" id="parseBtn" type="button">פענוח פריטים</button>
+      </div>
+    </div>
+    <div class="upload-status" id="uploadStatus" hidden></div>
+  </div>
+
+  <div class="board" id="board" hidden>
+    <div class="items-panel">
+      <div class="items-header">
+        <h2>פריטים <span id="itemCount"></span></h2>
+        <button class="ghost-btn" id="addItemBtn" type="button">+ הוספת פריט</button>
+      </div>
+
+      <div class="row head-row">
+        <span>פריט</span>
+        <span style="text-align:center;">מחיר ₪</span>
+        <span style="text-align:center;">משויך ל</span>
+        <span></span>
+      </div>
+      <div id="itemsList"></div>
+      <div class="empty-state" id="emptyState" hidden>אין פריטים עדיין. אפשר להוסיף ידנית עם הכפתור למעלה.</div>
+
+      <div class="unassigned-warning" id="unassignedWarning" hidden></div>
+    </div>
+
+    <aside class="summary-panel">
+      <div class="receipt-card">
+        <div class="receipt-top">
+          <h3>סיכום החלוקה</h3>
+          <p class="receipt-sub mono">— חתך כאן —</p>
+        </div>
+
+        <div class="coupon-row">
+          <label for="couponInput">קופון / הנחה (₪) — מתחלק בשווה בין השלושה</label>
+          <input type="number" id="couponInput" min="0" step="0.01" placeholder="0.00">
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="person-line" data-person="Orin">
+          <span class="person-name"><span class="swatch"></span>אורין</span>
+          <span class="person-amt mono" id="amtOrin">₪0.00</span>
+        </div>
+        <div class="person-line" data-person="Liat">
+          <span class="person-name"><span class="swatch"></span>ליאת</span>
+          <span class="person-amt mono" id="amtLiat">₪0.00</span>
+        </div>
+        <div class="person-line" data-person="Yoni">
+          <span class="person-name"><span class="swatch"></span>יוני</span>
+          <span class="person-amt mono" id="amtYoni">₪0.00</span>
+        </div>
+
+        <div class="bar-track" id="barTrack"></div>
+
+        <div class="divider dashed"></div>
+
+        <div class="totals-line"><span>סה"כ פריטים</span><span id="subtotalVal">₪0.00</span></div>
+        <div class="totals-line coupon-line"><span>הנחה</span><span id="couponVal">-₪0.00</span></div>
+        <div class="totals-line grand"><span>לתשלום בסה"כ</span><span id="grandVal">₪0.00</span></div>
+      </div>
+      <div class="perforation"></div>
+    </aside>
+  </div>
+
+  <footer>הפריטים מזוהים אוטומטית מתוך הטקסט המודבק במידת האפשר — כדאי לבדוק ולתקן לפני שסוגרים חשבון.</footer>
+</div>
+
+<script>
+const ROOMMATES = ["Orin","Liat","Yoni"];
+const NAME_HE = { Orin: "אורין", Liat: "ליאת", Yoni: "יוני" };
+let items = [];   // {id, name, price, assignees:Set}
+let idCounter = 1;
+
+const pasteArea = document.getElementById('pasteArea');
+const parseBtn = document.getElementById('parseBtn');
+const uploadStatus = document.getElementById('uploadStatus');
+const board = document.getElementById('board');
+const itemsList = document.getElementById('itemsList');
+const emptyState = document.getElementById('emptyState');
+const itemCount = document.getElementById('itemCount');
+const addItemBtn = document.getElementById('addItemBtn');
+const couponInput = document.getElementById('couponInput');
+const unassignedWarning = document.getElementById('unassignedWarning');
+
+parseBtn.addEventListener('click', ()=> handlePaste());
+pasteArea.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handlePaste();
+});
+
+function setStatus(msg, isError, showSpinner){
+  uploadStatus.hidden = false;
+  uploadStatus.className = 'upload-status' + (isError ? ' error' : '');
+  uploadStatus.innerHTML = (showSpinner ? '<span class="spinner"></span>' : '') + msg;
+}
+
+function handlePaste(){
+  const text = pasteArea.value;
+  if(!text || !text.trim()){
+    setStatus('לא הודבק שום טקסט. אפשר להדביק את פרטי החשבונית למעלה, או להוסיף פריטים ידנית.', true, false);
+    return;
+  }
+  setStatus('מפענחים את הטקסט...', false, true);
+  try{
+    const parsed = parsePastedText(text);
+    const newItems = parsed.map(p => ({
+      id: idCounter++,
+      name: p.name,
+      price: p.price,
+      assignees: new Set()
+    }));
+    items = items.concat(newItems);
+    if(newItems.length === 0){
+      setStatus('לא הצלחנו לזהות פריטים בטקסט הזה. אפשר לבדוק את הפורמט, או להוסיף פריטים ידנית למטה.', true, false);
+    } else {
+      setStatus('זוהו ' + newItems.length + ' פריטים. כדאי לעבור ולוודא שהכול נכון.', false, false);
+    }
+    board.hidden = false;
+    render();
+  } catch(err){
+    console.error(err);
+    setStatus('הייתה בעיה בפענוח הטקסט. אפשר לנסות שוב, או להוסיף פריטים ידנית.', true, false);
+    board.hidden = false;
+    render();
+  }
+}
+
+function parsePastedText(text){
+  const linesRaw = text.split('\n').map(l => l.replace(/[\u200e\u200f]/g,'').trim()).filter(l => l.length > 0);
+  const priceRe = /₪/;
+  const priceNumRe = /(\d+(?:\.\d{1,2})?)/;
+  const qtyRe = /^\d+(?:\.\d+)?\s*(יח['׳]|ק"ג|ק״ג)/;
+  const codeRe = /^\d{1,14}$/;
+  const promoRe = /^במבצע$/;
+  const perUnitRe = /^ל?יח['׳]?\.?$/;
+
+  const out = [];
+  let nameBuf = [];
+  let i = 0;
+  const n = linesRaw.length;
+
+  function flushAsItem(price){
+    let names = [];
+    for(const l of nameBuf){
+      if(names.length === 0 || names[names.length-1] !== l) names.push(l);
+    }
+    const name = names.join(' ').trim();
+    nameBuf = [];
+    if(name && price != null){
+      out.push({name: cleanName(name), price});
+    }
+  }
+
+  while(i < n){
+    const line = linesRaw[i];
+    if(promoRe.test(line)){ i++; continue; }
+    if(codeRe.test(line)){
+      const j = i + 1;
+      if(j < n && qtyRe.test(linesRaw[j])){
+        const k = j + 1;
+        if(k < n && priceRe.test(linesRaw[k])){
+          const m = linesRaw[k].match(priceNumRe);
+          const price = m ? parseFloat(m[1]) : null;
+          flushAsItem(price);
+          i = k + 1;
+          if(i < n && priceRe.test(linesRaw[i]) && !qtyRe.test(linesRaw[i]) && !codeRe.test(linesRaw[i])){
+            i++;
+            if(i < n && perUnitRe.test(linesRaw[i])) i++;
+          }
+          continue;
+        }
+      }
+      nameBuf.push(line);
+      i++;
+      continue;
+    }
+    nameBuf.push(line);
+    i++;
+  }
+  return out;
+}
+
+function cleanName(name){
+  return name.replace(/\s+/g,' ').replace(/^[-·•\s]+|[-·•\s]+$/g,'').trim();
+}
+
+// ---------- Rendering ----------
+
+function render(){
+  itemsList.innerHTML = '';
+  emptyState.hidden = items.length !== 0;
+  itemCount.textContent = items.length ? '(' + items.length + ')' : '';
+
+  for(const it of items){
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.dataset.id = it.id;
+
+    const nameInput = document.createElement('input');
+    nameInput.className = 'name-input';
+    nameInput.value = it.name;
+    nameInput.setAttribute('dir','auto');
+    nameInput.placeholder = 'שם הפריט';
+    nameInput.addEventListener('input', ()=>{ it.name = nameInput.value; });
+
+    const priceInput = document.createElement('input');
+    priceInput.className = 'price-input';
+    priceInput.type = 'number';
+    priceInput.step = '0.01';
+    priceInput.min = '0';
+    priceInput.value = (it.price ?? '').toString();
+    
+    // Set strictly to readonly initially so it mimics text
+    priceInput.readOnly = true; 
+    
+    // Toggle editability on double click
+    priceInput.addEventListener('dblclick', () => {
+      priceInput.readOnly = false;
+      priceInput.focus();
+    });
+    
+    // Lock it back when focus is lost
+    priceInput.addEventListener('blur', () => {
+      priceInput.readOnly = true;
+    });
+
+    priceInput.addEventListener('input', ()=>{
+      it.price = parseFloat(priceInput.value) || 0;
+      updateSummary();
+    });
+
+    const assignGroup = document.createElement('div');
+    assignGroup.className = 'assign-group';
+    ROOMMATES.forEach(name=>{
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'assign-pill';
+      btn.dataset.person = name;
+      btn.textContent = NAME_HE[name];
+      btn.title = NAME_HE[name];
+      
+      if(it.assignees.has(name)) btn.classList.add('active');
+      
+      btn.addEventListener('click', ()=>{
+        if(it.assignees.has(name)) it.assignees.delete(name);
+        else it.assignees.add(name);
+        btn.classList.toggle('active');
+        updateSummary();
+        renderWarning();
+      });
+      assignGroup.appendChild(btn);
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'del-btn';
+    delBtn.innerHTML = '✕';
+    delBtn.title = 'מחיקת פריט';
+    delBtn.addEventListener('click', ()=>{
+      items = items.filter(x => x.id !== it.id);
+      render();
+      updateSummary();
+    });
+
+    row.appendChild(nameInput);
+    row.appendChild(priceInput);
+    row.appendChild(assignGroup);
+    row.appendChild(delBtn);
+    itemsList.appendChild(row);
+  }
+
+  renderWarning();
+  updateSummary();
+}
+
+function renderWarning(){
+  const unassigned = items.filter(it => it.assignees.size === 0);
+  if(unassigned.length === 0){
+    unassignedWarning.hidden = true;
+    return;
+  }
+  const sum = unassigned.reduce((s,it)=> s + (parseFloat(it.price)||0), 0);
+  unassignedWarning.hidden = false;
+  unassignedWarning.textContent = unassigned.length + ' פריטים עדיין לא משויכים לאף אחד (סה"כ ₪' + sum.toFixed(2) + '). סמנו למי הם שייכים כדי שייכללו בסיכום.';
+}
+
+function updateSummary(){
+  const totals = {Orin:0, Liat:0, Yoni:0};
+  let subtotal = 0;
+
+  items.forEach(it=>{
+    const price = parseFloat(it.price) || 0;
+    subtotal += price;
+    const n = it.assignees.size;
+    if(n === 0) return;
+    const share = price / n;
+    it.assignees.forEach(name => { totals[name] += share; });
+  });
+
+  const coupon = parseFloat(couponInput.value) || 0;
+  const couponShare = coupon / 3;
+  ROOMMATES.forEach(name => { totals[name] -= couponShare; });
+
+  const grand = subtotal - coupon;
+
+  document.getElementById('amtOrin').textContent = fmt(totals.Orin);
+  document.getElementById('amtLiat').textContent = fmt(totals.Liat);
+  document.getElementById('amtYoni').textContent = fmt(totals.Yoni);
+  document.getElementById('subtotalVal').textContent = fmt(subtotal);
+  document.getElementById('couponVal').textContent = coupon ? '-' + fmt(coupon) : fmt(0);
+  document.getElementById('grandVal').textContent = fmt(grand);
+
+  const barTrack = document.getElementById('barTrack');
+  barTrack.innerHTML = '';
+  const posTotal = Math.max(totals.Orin,0) + Math.max(totals.Liat,0) + Math.max(totals.Yoni,0);
+  if(posTotal > 0){
+    [['orin','Orin'],['liat','Liat'],['yoni','Yoni']].forEach(([cls,name])=>{
+      const seg = document.createElement('div');
+      seg.className = 'bar-seg ' + cls;
+      const pct = Math.max(totals[name],0) / posTotal * 100;
+      seg.style.width = pct + '%';
+      barTrack.appendChild(seg);
+    });
+  }
+}
+
+function fmt(n){
+  const v = (n || 0).toFixed(2);
+  return '₪' + v;
+}
+
+addItemBtn.addEventListener('click', ()=>{
+  items.push({ id: idCounter++, name: '', price: 0, assignees: new Set() });
+  board.hidden = false;
+  render();
+  const rows = itemsList.querySelectorAll('.name-input');
+  if(rows.length) rows[rows.length-1].focus();
+});
+
+couponInput.addEventListener('input', updateSummary);
+</script>
+</body>
+</html>
