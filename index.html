@@ -157,6 +157,28 @@
   }
   @keyframes spin{to{transform:rotate(360deg);}}
 
+
+  /* ---------- Input tabs & file drop ---------- */
+  .input-tabs{display:flex;gap:6px;margin-bottom:14px;background:var(--paper-alt);padding:4px;border-radius:11px;}
+  .input-tab{
+    flex:1;border:none;background:transparent;color:var(--ink-soft);
+    font-family:inherit;font-size:14px;font-weight:600;padding:9px 12px;
+    border-radius:8px;cursor:pointer;transition:.12s;
+  }
+  .input-tab:hover{color:var(--ink);}
+  .input-tab.active{background:var(--card);color:var(--stamp);box-shadow:0 1px 3px rgba(0,0,0,.12);}
+  .input-pane[hidden]{display:none;}
+  .file-drop{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    min-height:160px;text-align:center;cursor:pointer;
+    border:1px solid var(--line);background:var(--paper-alt);border-radius:10px;
+    padding:20px;transition:.15s ease;
+  }
+  .file-drop:hover,.file-drop.drag{border-color:var(--stamp);background:var(--stamp-soft);}
+  .file-drop svg{opacity:.55;}
+  .file-drop .big{font-size:16px;font-weight:700;margin:0;}
+  .file-drop .small{font-size:13px;color:var(--ink-soft);margin:0;}
+
   /* ---------- Board layout ---------- */
   .board{
     display:grid;
@@ -529,22 +551,42 @@
   <div class="hero">
     <p class="eyebrow">קניות משותפות · שלושה שותפים</p>
     <h1>מפצל <span>חשבוניות</span></h1>
-    <p class="sub">מדביקים את הטקסט של החשבונית מהאתר, מסמנים מי הזמין כל פריט, ומקבלים בדיוק כמה אורין, ליאת ויוני חייבים.</p>
+    <p class="sub">מדביקים את הטקסט של החשבונית או מעלים את הקבלה מרמי לוי כקובץ PDF, מסמנים מי הזמין כל פריט, ומקבלים בדיוק כמה אורין, ליאת ויוני חייבים.</p>
   </div>
 
   <div class="upload-card">
     <div class="upload-zone" id="dropZone">
-      <div class="zone-head">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#23262B" stroke-width="1.4">
-          <path d="M6 2h9l5 5v13a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"/>
-          <path d="M9 13h6M9 16.5h6M9 9.5h2"/>
-        </svg>
-        <p>מדביקים כאן את הטקסט של החשבונית</p>
+      <div class="input-tabs" role="tablist">
+        <button class="input-tab active" id="tabPaste" type="button" role="tab">הדבקת טקסט</button>
+        <button class="input-tab" id="tabFile" type="button" role="tab">העלה קובץ מרמי לוי</button>
       </div>
-      <textarea class="paste-textarea" id="pasteArea" dir="auto" placeholder="פלפל חריף&#10;132&#10;0.042 ק&quot;ג&#10;0.13 ₪&#10;..."></textarea>
-      <p class="hint">מעתיקים את פרטי הפריטים מהאתר של הסופר ומדביקים כאן, שורה אחר שורה. אפשר גם להוסיף פריטים ידנית בהמשך.</p>
-      <div class="paste-actions">
-        <button class="primary-btn" id="parseBtn" type="button">פענוח פריטים</button>
+
+      <div class="input-pane" id="panePaste">
+        <div class="zone-head">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#23262B" stroke-width="1.4">
+            <path d="M6 2h9l5 5v13a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"/>
+            <path d="M9 13h6M9 16.5h6M9 9.5h2"/>
+          </svg>
+          <p>מדביקים כאן את הטקסט של החשבונית</p>
+        </div>
+        <textarea class="paste-textarea" id="pasteArea" dir="auto" placeholder="ביצים 12 יח רג: 14.54 ₪&#10;חלב בקרטון 3%: 7.35 ₪&#10;בצל יבש: 4.34 ₪&#10;..."></textarea>
+        <p class="hint">כל פריט בשורה נפרדת בפורמט: שם: מחיר ₪. אפשר גם להוסיף פריטים ידנית בהמשך.</p>
+        <div class="paste-actions">
+          <button class="primary-btn" id="parseBtn" type="button">פענוח פריטים</button>
+        </div>
+      </div>
+
+      <div class="input-pane" id="paneFile" hidden>
+        <div class="file-drop" id="fileDrop" tabindex="0">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#23262B" stroke-width="1.4">
+            <path d="M12 16V4M7 9l5-5 5 5"/>
+            <path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/>
+          </svg>
+          <p class="big">העלה קובץ מרמי לוי</p>
+          <p class="small">גוררים לכאן את קובץ ה-PDF של הקבלה, או לוחצים כדי לבחור קובץ</p>
+          <p class="small">PDF בלבד · המחיר של כל פריט הוא אחרי המבצעים</p>
+        </div>
+        <input type="file" id="fileInput" accept=".pdf,application/pdf" hidden>
       </div>
     </div>
     <div class="upload-status" id="uploadStatus" hidden></div>
@@ -612,7 +654,7 @@
     </aside>
   </div>
 
-  <footer>הפריטים מזוהים אוטומטית מתוך הטקסט המודבק במידת האפשר — כדאי לבדוק ולתקן לפני שסוגרים חשבון.</footer>
+  <footer>הפריטים מזוהים אוטומטית מתוך הטקסט או הקובץ במידת האפשר — כדאי לבדוק ולתקן לפני שסוגרים חשבון.</footer>
 </div>
 
 <script>
@@ -658,7 +700,7 @@ function handlePaste(){
       price: p.price,
       assignees: new Set()
     }));
-    items = items.concat(newItems);
+    if(newItems.length > 0) items = newItems;   // replaces the current list
     if(newItems.length === 0){
       setStatus('לא הצלחנו לזהות פריטים בטקסט הזה. אפשר לבדוק את הפורמט, או להוסיף פריטים ידנית למטה.', true, false);
     } else {
@@ -675,58 +717,227 @@ function handlePaste(){
 }
 
 function parsePastedText(text){
-  const linesRaw = text.split('\n').map(l => l.replace(/[\u200e\u200f]/g,'').trim()).filter(l => l.length > 0);
-  const priceRe = /₪/;
-  const priceNumRe = /(\d+(?:\.\d{1,2})?)/;
-  const qtyRe = /^\d+(?:\.\d+)?\s*(יח['׳]|ק"ג|ק״ג)/;
-  const codeRe = /^\d{1,14}$/;
-  const promoRe = /^במבצע$/;
-  const perUnitRe = /^ל?יח['׳]?\.?$/;
-
   const out = [];
-  let nameBuf = [];
-  let i = 0;
-  const n = linesRaw.length;
-
-  function flushAsItem(price){
-    let names = [];
-    for(const l of nameBuf){
-      if(names.length === 0 || names[names.length-1] !== l) names.push(l);
-    }
-    const name = names.join(' ').trim();
-    nameBuf = [];
-    if(name && price != null){
-      out.push({name: cleanName(name), price});
-    }
-  }
-
-  while(i < n){
-    const line = linesRaw[i];
-    if(promoRe.test(line)){ i++; continue; }
-    if(codeRe.test(line)){
-      const j = i + 1;
-      if(j < n && qtyRe.test(linesRaw[j])){
-        const k = j + 1;
-        if(k < n && priceRe.test(linesRaw[k])){
-          const m = linesRaw[k].match(priceNumRe);
-          const price = m ? parseFloat(m[1]) : null;
-          flushAsItem(price);
-          i = k + 1;
-          if(i < n && priceRe.test(linesRaw[i]) && !qtyRe.test(linesRaw[i]) && !codeRe.test(linesRaw[i])){
-            i++;
-            if(i < n && perUnitRe.test(linesRaw[i])) i++;
-          }
-          continue;
-        }
-      }
-      nameBuf.push(line);
-      i++;
-      continue;
-    }
-    nameBuf.push(line);
-    i++;
+  const lines = text.split('\n').map(l => l.replace(/[\u200e\u200f]/g,'').trim()).filter(l => l.length > 0);
+  // Format: "name: price ₪"
+  const lineRe = /^(.+):\s*(-?\d+(?:[.,]\d{1,2})?)\s*₪/;
+  for(const line of lines){
+    const m = line.match(lineRe);
+    if(!m) continue;
+    const name = cleanName(m[1]);
+    const price = parseFloat(m[2].replace(',', '.'));
+    if(name && !isNaN(price)) out.push({name, price});
   }
   return out;
+}
+
+// ---------- Input tabs ----------
+const tabPaste = document.getElementById('tabPaste');
+const tabFile = document.getElementById('tabFile');
+const panePaste = document.getElementById('panePaste');
+const paneFile = document.getElementById('paneFile');
+function showTab(which){
+  const isPaste = which === 'paste';
+  tabPaste.classList.toggle('active', isPaste);
+  tabFile.classList.toggle('active', !isPaste);
+  panePaste.hidden = !isPaste;
+  paneFile.hidden = isPaste;
+}
+tabPaste.addEventListener('click', ()=> showTab('paste'));
+tabFile.addEventListener('click', ()=> showTab('file'));
+
+// ---------- PDF upload (Rami Levy receipt) ----------
+const fileDrop = document.getElementById('fileDrop');
+const fileInput = document.getElementById('fileInput');
+const PDFJS_VERSION = '3.11.174';
+const PDFJS_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/' + PDFJS_VERSION + '/';
+let pdfjsPromise = null;
+
+function loadPdfJs(){
+  if(pdfjsPromise) return pdfjsPromise;
+  pdfjsPromise = new Promise((resolve, reject)=>{
+    if(window.pdfjsLib){ resolve(window.pdfjsLib); return; }
+    const sc = document.createElement('script');
+    sc.src = PDFJS_BASE + 'pdf.min.js';
+    sc.onload = async ()=>{
+      const lib = window.pdfjsLib;
+      try{
+        // The worker is fetched as a blob so it also works when this page is opened as a local file.
+        const res = await fetch(PDFJS_BASE + 'pdf.worker.min.js');
+        const code = await res.text();
+        lib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([code], {type:'text/javascript'}));
+      }catch(e){
+        lib.GlobalWorkerOptions.workerSrc = PDFJS_BASE + 'pdf.worker.min.js';
+      }
+      resolve(lib);
+    };
+    sc.onerror = ()=> reject(new Error('pdfjs-load-failed'));
+    document.head.appendChild(sc);
+  });
+  pdfjsPromise.catch(()=>{ pdfjsPromise = null; });
+  return pdfjsPromise;
+}
+
+fileDrop.addEventListener('click', ()=> fileInput.click());
+fileDrop.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); fileInput.click(); } });
+fileInput.addEventListener('change', ()=>{
+  if(fileInput.files && fileInput.files[0]) handlePdfFile(fileInput.files[0]);
+  fileInput.value = '';
+});
+['dragenter','dragover'].forEach(ev => fileDrop.addEventListener(ev, (e)=>{ e.preventDefault(); fileDrop.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev => fileDrop.addEventListener(ev, (e)=>{ e.preventDefault(); fileDrop.classList.remove('drag'); }));
+fileDrop.addEventListener('drop', (e)=>{
+  const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if(f) handlePdfFile(f);
+});
+// Dropping a file next to the box shouldn't make the browser open it.
+window.addEventListener('dragover', (e)=> e.preventDefault());
+window.addEventListener('drop', (e)=> e.preventDefault());
+
+async function handlePdfFile(file){
+  const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+  if(!isPdf){
+    setStatus('אפשר להעלות רק קובץ PDF. אפשר גם להדביק את הטקסט בלשונית "הדבקת טקסט".', true, false);
+    return;
+  }
+  setStatus('קוראים את הקובץ...', false, true);
+  try{
+    const pdfjsLib = await loadPdfJs();
+    const buf = await file.arrayBuffer();
+    const doc = await pdfjsLib.getDocument({data: new Uint8Array(buf)}).promise;
+    const pages = [];
+    for(let p = 1; p <= doc.numPages; p++){
+      const page = await doc.getPage(p);
+      const vp = page.getViewport({scale:1});
+      const tc = await page.getTextContent();
+      pages.push({
+        width: vp.width,
+        items: tc.items
+          .filter(it => it.str)
+          .map(it => ({str: it.str, x: it.transform[4], y: vp.height - it.transform[5]}))
+      });
+    }
+    const result = parseRamiLevyPages(pages);
+    if(result.items.length === 0){
+      setStatus('לא הצלחנו לזהות פריטים בקובץ הזה. האם זו קבלה מרמי לוי? אפשר גם להדביק את הטקסט ידנית.', true, false);
+      return;
+    }
+    items = result.items.map(p => ({
+      id: idCounter++, name: p.name, price: p.price, assignees: new Set()
+    }));   // replaces the current list
+    let msg = 'זוהו ' + result.items.length + ' פריטים מהקבלה (המחירים אחרי מבצעים).';
+    let warn = false;
+    if(result.paid != null){
+      const diff = Math.round((result.sum - result.paid) * 100) / 100;
+      if(Math.abs(diff) < 0.005){
+        msg += ' הסכום ₪' + result.sum.toFixed(2) + ' תואם לסכום ששולם בקבלה.';
+      } else {
+        warn = true;
+        msg += ' שימו לב: סכום הפריטים ₪' + result.sum.toFixed(2) + ' לא תואם לסכום בקבלה (₪' + result.paid.toFixed(2) + '), כדאי לבדוק.';
+      }
+    }
+    setStatus(msg, warn, false);
+    board.hidden = false;
+    render();
+  } catch(err){
+    console.error(err);
+    if(err && err.message === 'pdfjs-load-failed'){
+      setStatus('לא הצלחנו לטעון את רכיב קריאת ה-PDF. צריך חיבור לאינטרנט כדי להשתמש באפשרות הזו.', true, false);
+    } else {
+      setStatus('הייתה בעיה בקריאת הקובץ. אפשר לנסות שוב, או להדביק את הטקסט ידנית.', true, false);
+    }
+  }
+}
+
+// Reads a Rami Levy receipt from the text positions pdf.js gives us.
+// pages: [{width, items:[{str,x,y}]}]. Returns {items:[{name,price}], sum, paid}.
+function parseRamiLevyPages(pages){
+  const r2 = n => Math.round(n * 100) / 100;
+  const numOf = str => {
+    const m = str.replace(/,/g,'').match(/-?\d+(?:\.\d+)?/);
+    return m ? parseFloat(m[0]) : null;
+  };
+  const rows = [];     // one entry per receipt row (before splitting multi-unit rows)
+  let cur = null;
+  let paid = null;
+  let summary = false;
+
+  for(const pg of pages){
+    const W = pg.width || 596;
+    const lines = [];
+    const sorted = pg.items.slice().sort((a,b)=> a.y - b.y || a.x - b.x);
+    for(const it of sorted){
+      const last = lines[lines.length-1];
+      if(last && Math.abs(last.y - it.y) <= 2.5) last.p.push(it);
+      else lines.push({y: it.y, p: [it]});
+    }
+    for(const l of lines){
+      const region = (lo, hi) => l.p.filter(p => p.x >= lo*W && p.x < hi*W);
+      const asc = ps => ps.sort((a,b)=> a.x - b.x).map(p => p.str).join('').replace(/\s+/g,'');
+      const totalStr = asc(region(0, 0.218));
+      const priceStr = asc(region(0.218, 0.403));
+      const qtyStr   = asc(region(0.403, 0.52));
+      const descStr  = region(0.52, 2).sort((a,b)=> b.x - a.x).map(p => p.str).join('').replace(/\s+/g,' ').trim();
+
+      const fullStr = l.p.slice().sort((a,b)=> b.x - a.x).map(p => p.str).join(' ').replace(/\s+/g,' ');
+      if(fullStr.includes('סכום') && fullStr.includes('לתשלום')){
+        const v = numOf(asc(l.p.filter(p => p.x < 0.25*W)).replace('₪',''));
+        if(v != null) paid = v;
+        cur = null; summary = true;
+        continue;
+      }
+      if(/אמצעי תשלום|סיכום התשלום/.test(fullStr)){ cur = null; summary = true; continue; }
+      if(summary) continue;
+      if(descStr.includes('תיאור')) continue;   // repeated table header
+
+      // Promotion line: "מבצע ... -₪x.xx"
+      if(/^מבצע(\s|$)/.test(descStr)){
+        if(cur){
+          const d = totalStr.match(/₪?(\d+(?:\.\d+)?)/);
+          if(d) cur.discount += parseFloat(d[1]);
+        }
+        continue;
+      }
+      // Main item line: has quantity + unit price + gross total
+      if(qtyStr && /\d/.test(qtyStr) && /יח|ק|ג/.test(qtyStr) && descStr){
+        const qty = numOf(qtyStr);
+        const isKg = /ק/.test(qtyStr) && /ג/.test(qtyStr) && !/יח/.test(qtyStr);
+        const gross = numOf(totalStr.replace('₪',''));
+        if(qty == null || gross == null) { cur = null; continue; }
+        cur = {name: descStr, qty, isKg, gross, post: null, discount: 0};
+        rows.push(cur);
+        continue;
+      }
+      // Barcode line: the item's post-sale price sits here when a promotion applied
+      if(cur && /^\d{2,14}$/.test(descStr)){
+        const v = totalStr ? numOf(totalStr.replace('₪','')) : null;
+        if(v != null) cur.post = v;
+        continue;
+      }
+    }
+  }
+
+  const out = [];
+  for(const row of rows){
+    let finalTotal = row.post != null ? row.post : r2(row.gross - row.discount);
+    if(finalTotal < 0) finalTotal = 0;
+    const units = (!row.isKg && Number.isInteger(row.qty) && row.qty > 1) ? row.qty : 1;
+    if(units === 1){
+      out.push({name: row.name, price: r2(finalTotal)});
+    } else {
+      // Several units of the same product: one line per unit, cents shared out so the sum stays exact.
+      const cents = Math.round(finalTotal * 100);
+      const base = Math.floor(cents / units);
+      let extra = cents - base * units;
+      for(let u = 0; u < units; u++){
+        const c = base + (extra > 0 ? 1 : 0);
+        if(extra > 0) extra--;
+        out.push({name: row.name, price: c / 100});
+      }
+    }
+  }
+  const sum = r2(out.reduce((t,i)=> t + i.price, 0));
+  return {items: out, sum, paid};
 }
 
 function cleanName(name){
@@ -916,4 +1127,3 @@ downloadBtn.addEventListener('click', () => {
 </script>
 </body>
 </html>
-```[cite: 1]
